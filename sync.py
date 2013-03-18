@@ -9,8 +9,8 @@
 
 
 
-import sys
-sys.path.append("./pywikipedia")
+#import sys
+#sys.path.append("./pywikipedia")
 from wikipedia import *
 
 import re
@@ -18,10 +18,8 @@ import re
 
 
 class SyncSites:
-    def __init__(self, dtap, options):
+    def __init__(self, options):
 	self.options = options
-
-        print 'Checking dtap:', dtap
 
         if options.original_wiki:
             original_wiki = options.original_wiki
@@ -32,12 +30,12 @@ class SyncSites:
 
         family = options.family or config.sync_default_family
 
-        sites = ['for', 'ecm']
-        if dtap == 'loc':
-            sites.append('light')
-            sites.reverse()
-        self.dummy = getSite(original_wiki, family)
-        self.sites = map(lambda s: getSite(s + dtap, family), sites)
+        sites = options.destination_wiki
+        print sites
+
+        self.original = getSite(original_wiki, family)
+
+        self.sites = map(lambda s: getSite(s, family), sites)
         print sites
         self.differences = {}
         self.user_diff = {}
@@ -52,7 +50,7 @@ class SyncSites:
             # User namespace is number 2
             return set(re.findall(site.namespace(2) + ':(\w+)["\&]',  userlist))
         
-        ref_users = get_users(self.dummy)
+        ref_users = get_users(self.original)
         for site in self.sites:
             users = get_users(site)
             diff = list(ref_users.difference(users))
@@ -83,7 +81,7 @@ class SyncSites:
     def check_namespace(self, namespace):
         print "CHECKING NAMESPACE", namespace
         pages = map(lambda p: p.title(),
-                    self.dummy.allpages('!', namespace))
+                    self.original.allpages('!', namespace))
         for p in pages:
             if not p in ['MediaWiki:Sidebar', 'MediaWiki:Mainpage', 
                          'MediaWiki:Sitenotice', 'MediaWiki:MenuSidebar']:
@@ -97,17 +95,17 @@ class SyncSites:
     def generate_overviews(self):
         for site in self.sites:
             sync_overview_page = Page(site, 'User:' + site.loggedInAs() + '/sync.py overview')
-            output = "== Pages that differ from dummy ==\n\n"
+            output = "== Pages that differ from original ==\n\n"
             if self.differences[site]:
                 output += "".join(map(lambda l: '* [[:' + l + "]]\n", self.differences[site]))
             else:
                 output += "All important pages are the same"
             
-            output += "\n\n== Admins from dummy that are missing here ==\n\n"
+            output += "\n\n== Admins from original that are missing here ==\n\n"
             if self.user_diff[site]:
                 output += "".join(map(lambda l: '* ' + l.replace('_', ' ') + "\n", self.user_diff[site]))
             else:
-                output += "All users from dummy are also present on this wiki"
+                output += "All users from original are also present on this wiki"
 
             print output
             sync_overview_page.put(output, site.loggedInAs() + ' sync.py')
@@ -116,7 +114,7 @@ class SyncSites:
     def check_page(self, pagename):
         print "\nChecking", pagename,
         sys.stdout.flush()
-        page1 = Page(self.dummy, pagename)
+        page1 = Page(self.original, pagename)
         txt1 = page1.get()
 
         for site in self.sites:
@@ -131,7 +129,7 @@ class SyncSites:
                 self.differences[site].append(pagename)
 
 		if self.options.replace:
-		  page2.put(txt1, 'Synchronisatie van dummy')
+		  page2.put(txt1, 'sync.py')
             else:
                 sys.stdout.write('.')
                 sys.stdout.flush()
@@ -140,23 +138,24 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
-    parser.add_argument("-p", "--family", dest="family",
-                        help="replace pages")
+    parser.add_argument("-f", "--family", dest="family",
+                        help="wiki family")
+    # TODO:  
+    #parser.add_argument("-df", "--origin-family", dest="family",
+    #                    help="if origin family differs from destination family")
     parser.add_argument("-r", "--replace", action="store_true",
-                        help="replace pages")
+                        help="actually replace pages (without this option you will only get an overview page)")
     parser.add_argument("-o", "--original", dest="original_wiki",
                         help="original wiki")
+    parser.add_argument('destination_wiki', metavar='N', type=str, nargs='+',
+                        help='destination wiki(s)')
     parser.add_argument("-ns", "--namespace", dest="namespace",
                         help="specify namespace")
     
     (options, args) = parser.parse_known_args()
     print options
 
-    if len(args) == 0:
-        args = ['loc']
-
-    for dtap in args:
-        s = SyncSites(dtap, options)
-        s.check_sysops()
-        s.check_namespaces()
-        s.generate_overviews()
+    s = SyncSites(options)
+    s.check_sysops()
+    s.check_namespaces()
+    s.generate_overviews()
