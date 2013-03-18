@@ -8,7 +8,11 @@ very useful for others.
 sync.py 
 -------
 
-sync.py can synchronize specific namespaces on several wikis.
+`sync.py` can synchronize specific namespaces on several wikis. Great for 
+* dealing with MediaWiki in a DTAP setup (this was the use case for which it was built)
+* copying over an entire wiki (but not the users and other cruft from the database)
+* synchronizing specific namespaces of different wikis
+* copying over a MediaWiki site from a wikifarm that doesn't provide a database dump
 
 See `sync.py --help` for some options.
 
