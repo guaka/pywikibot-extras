@@ -1,5 +1,20 @@
-pywikibot-sync
-==============
+pywikibot-extras
+================
 
-I have built a tool based on pywikipediabot that can synchronize specific namespaces of several wikis.
-I have to make it slightly more general before I can release it.
+A bunch of pywikipediabot scripts I built for a client that could be
+very useful for others.
+
+
+sync.py 
+=======
+
+sync.py is can synchronize specific namespaces on several wikis.
+
+See `sync.py --help` for some options.
+
+
+
+deadlinkreport.py
+=================
+
+Create a nice overview of dead links.
