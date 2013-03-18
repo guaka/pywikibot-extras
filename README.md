@@ -1,7 +1,7 @@
 pywikibot-extras
 ================
 
-A bunch of pywikipediabot scripts I built for a client that could be
+A bunch of [pywikipediabot](http://www.mediawiki.org/wiki/Manual:Pywikipediabot) scripts I built for a client that could be
 very useful for others.
 
 
@@ -20,3 +20,9 @@ deadlinkreport.py
 Create a nice overview of dead links.
 
 Currently not very generic.
+
+
+license
+-------
+
+MIT, for compatibility with pywikipediabot.
