@@ -8,7 +8,7 @@ very useful for others.
 sync.py 
 -------
 
-sync.py is can synchronize specific namespaces on several wikis.
+sync.py can synchronize specific namespaces on several wikis.
 
 See `sync.py --help` for some options.
 
@@ -18,3 +18,5 @@ deadlinkreport.py
 -----------------
 
 Create a nice overview of dead links.
+
+Currently not very generic.
