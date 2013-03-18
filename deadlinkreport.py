@@ -10,10 +10,10 @@ import wikipedia
 import codecs, pickle
 import datetime
 
-def create_report(wiki):
+def create_report(family, wiki, extra_fields = False):
     datfilename = wikipedia.config.datafilepath('deadlinks',
 						'deadlinks-%s-%s.dat'
-						% ('modoc', wiki))
+						% (family, wiki))
     datfile = open(datfilename, 'r')
     historyDict = pickle.load(datfile)
 
@@ -28,16 +28,23 @@ def create_report(wiki):
 	first = nicetime(min(dates))
 	error = info[0][2].replace('404 Not Found', '404')
 	page = info[0][0]
-        editors = get_editors(wiki, page)
-	if wiki == 'forprod':
-            page = '[[blauw:' + page + '|]]'
 
-	return '||'.join([page, error, first, last,
-                          editors['auteur'],
-                          editors['bureauredacteur']
-                          ])
+        if not extra_fields:
+            return '||'.join([page, error, first, last])
+
+        else:
+            editors = get_editors(wiki, page)
+            if wiki == 'forprod':
+                page = '[[blauw:' + page + '|]]'
+                
+            return '||'.join([page, error, first, last,
+                              editors['auteur'],
+                              editors['bureauredacteur']
+                              ])
 
     def get_editors(site, pagename):
+        '''Find extra fields'''
+
         page = wikipedia.Page(site, pagename)
         editors = { 'auteur': '',
                     'bureauredacteur': '' }
@@ -63,11 +70,11 @@ def create_report(wiki):
 
 
     pagename = "User:" + site.loggedInAs() + "/linkrapport " + wiki
-    site = wikipedia.getSite("ecmprod", "modoc")
+    site = wikipedia.getSite("ecmprod", family)
     save_report(site, pagename, output)
 
     pagename = "User:" + site.loggedInAs() + "/linkrapport"
-    site = wikipedia.getSite(wiki, 'modoc')
+    site = wikipedia.getSite(wiki, family)
     save_report(site, pagename, output)
     
 
@@ -75,6 +82,6 @@ for dtap in ['test', 'prod', 'acc']:
     for wiki in ['for', 'eka', 'ecm']:
         print wiki + dtap
         try:
-            create_report(wiki + dtap)
+            create_report(config.deadlinkreport_default_family, wiki + dtap, True)
         except EOFError:
             print EOFError, ' with ', wiki + dtap
