@@ -89,6 +89,8 @@ class SyncSites:
                     self.check_page(p)
                 except pywikibot.exceptions.NoPage:
                     print 'Bizarre NoPage exception that we are just going to ignore'
+                except pywikibot.exceptions.IsRedirectPage:
+                    print 'error: Redirectpage - todo: handle gracefully'
         print
 
 
