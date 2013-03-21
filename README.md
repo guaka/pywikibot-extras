@@ -1,8 +1,8 @@
 pywikibot-extras
 ================
 
-A bunch of [pywikipediabot](http://www.mediawiki.org/wiki/Manual:Pywikipediabot) scripts I built for a client that could be
-very useful for others.
+A bunch of [pywikipediabot](http://www.mediawiki.org/wiki/Manual:Pywikipediabot) scripts built for a client
+that could be very useful for others.
 
 
 sync.py 
@@ -26,7 +26,7 @@ See `sync.py --help` for some options.
 deadlinkreport.py
 -----------------
 
-Create a nice overview of dead links.
+Creates a nice overview of dead links.
 
 Currently not very generic.
 
