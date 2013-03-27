@@ -134,13 +134,14 @@ class SyncSites:
             if page2.exists():
                 txt2 = page2.get()
                 
-                if config.sync_replace:
-                    txt_new = multiple_replace(txt2, config.sync_replace)
-                    if txt2 != txt_new:
-                        print 'NOTE: text replaced using sync_replace'
-                        txt2 = txt_new
             else:
                 txt2 = ''
+                
+            if config.sync_replace:
+                txt_new = multiple_replace(txt1, config.sync_replace)
+                if txt1 != txt_new:
+                    print 'NOTE: text replaced using config.sync_replace'
+                    txt1 = txt_new
 
             if txt1 != txt2:
                 print "\n", site, 'DIFFERS'
