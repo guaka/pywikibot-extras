@@ -8,13 +8,15 @@
 #
 
 
-
-#import sys
-#sys.path.append("./pywikipedia")
+import sys
+import re
 from wikipedia import *
 
-import re
 
+def multiple_replace(text, word_dict):
+    for key in word_dict:
+        text = text.replace(key, word_dict[key])
+    return text
 
 
 class SyncSites:
@@ -30,10 +32,18 @@ class SyncSites:
 
         family = options.family or config.sync_default_family
 
+
         sites = options.destination_wiki
         print sites
 
         self.original = getSite(original_wiki, family)
+        
+        if 'help' in options.namespace:
+            nsd = dict(map(lambda n: (self.original.getNamespaceIndex(n), n), 
+                           self.original.namespaces()))
+            for k in nsd:
+                print k, nsd[k]
+            sys.exit()
 
         self.sites = map(lambda s: getSite(s, family), sites)
         print sites
@@ -123,6 +133,12 @@ class SyncSites:
             page2 = Page(site, pagename)
             if page2.exists():
                 txt2 = page2.get()
+                
+                if config.sync_replace:
+                    txt_new = multiple_replace(txt2, config.sync_replace)
+                    if txt2 != txt_new:
+                        print 'NOTE: text replaced using sync_replace'
+                        txt2 = txt_new
             else:
                 txt2 = ''
 
@@ -161,3 +177,4 @@ if __name__ == '__main__':
     s.check_sysops()
     s.check_namespaces()
     s.generate_overviews()
+    
