@@ -34,11 +34,10 @@ class SyncSites:
 
 
         sites = options.destination_wiki
-        print sites
 
         self.original = getSite(original_wiki, family)
         
-        if 'help' in options.namespace:
+        if options.namespace and 'help' in options.namespace:
             nsd = dict(map(lambda n: (self.original.getNamespaceIndex(n), n), 
                            self.original.namespaces()))
             for k in nsd:
@@ -46,13 +45,16 @@ class SyncSites:
             sys.exit()
 
         self.sites = map(lambda s: getSite(s, family), sites)
-        print sites
+
         self.differences = {}
         self.user_diff = {}
+        print 'Syncing to', 
         for s in self.sites:
             self.differences[s] = []
             self.user_diff[s] = []
-            
+            print s,
+        print
+
     def check_sysops(self):
         def get_users(site):
             userlist = site.getUrl(site.get_address('Special:Userlist&group=sysop'))
@@ -82,14 +84,13 @@ class SyncSites:
         if self.options.namespace:
             print options.namespace
             namespaces = [int(options.namespace)]
-        print "Checking these namespaces", namespaces
-        # self.check_page('Versienummer')
+        print "Checking these namespaces", namespaces, "\n"
 
         for ns in namespaces:
             self.check_namespace(ns)
 
     def check_namespace(self, namespace):
-        print "CHECKING NAMESPACE", namespace
+        print "\nCHECKING NAMESPACE", namespace
         pages = map(lambda p: p.title(),
                     self.original.allpages('!', namespace))
         for p in pages:
@@ -137,10 +138,11 @@ class SyncSites:
             else:
                 txt2 = ''
                 
-            if config.sync_replace:
-                txt_new = multiple_replace(txt1, config.sync_replace)
+            if config.sync_replace and config.sync_replace.has_key(str(site)):
+                txt_new = multiple_replace(txt1, config.sync_replace[str(site)])
                 if txt1 != txt_new:
                     print 'NOTE: text replaced using config.sync_replace'
+                    print txt1, txt_new, txt2
                     txt1 = txt_new
 
             if txt1 != txt2:
@@ -172,7 +174,6 @@ if __name__ == '__main__':
                         help="specify namespace")
     
     (options, args) = parser.parse_known_args()
-    print options
 
     s = SyncSites(options)
     s.check_sysops()
