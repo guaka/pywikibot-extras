@@ -13,6 +13,13 @@ import re
 from wikipedia import *
 
 
+def namespaces(site):
+    ns = dict(map(lambda n: (site.getNamespaceIndex(n), n), 
+                  site.namespaces()))
+    ns[0] = ''
+    return ns
+
+
 def multiple_replace(text, word_dict):
     for key in word_dict:
         text = text.replace(key, word_dict[key])
@@ -38,8 +45,7 @@ class SyncSites:
         self.original = getSite(original_wiki, family)
         
         if options.namespace and 'help' in options.namespace:
-            nsd = dict(map(lambda n: (self.original.getNamespaceIndex(n), n), 
-                           self.original.namespaces()))
+            nsd = namespaces(self.original)
             for k in nsd:
                 print k, nsd[k]
             sys.exit()
@@ -131,7 +137,13 @@ class SyncSites:
         txt1 = page1.get()
 
         for site in self.sites:
-            page2 = Page(site, pagename)
+            if options.dest_namespace:
+                new_pagename = namespaces(site)[int(options.dest_namespace)] + page1.titleWithoutNamespace()
+                print "\nCross namespace, new title: ", new_pagename
+            else:
+                new_pagename = pagename
+            
+            page2 = Page(site, new_pagename)
             if page2.exists():
                 txt2 = page2.get()
                 
@@ -164,6 +176,7 @@ if __name__ == '__main__':
     # TODO:  
     #parser.add_argument("-df", "--origin-family", dest="family",
     #                    help="if origin family differs from destination family")
+
     parser.add_argument("-r", "--replace", action="store_true",
                         help="actually replace pages (without this option you will only get an overview page)")
     parser.add_argument("-o", "--original", dest="original_wiki",
@@ -172,11 +185,13 @@ if __name__ == '__main__':
                         help='destination wiki(s)')
     parser.add_argument("-ns", "--namespace", dest="namespace",
                         help="specify namespace")
+    parser.add_argument("-dns", "--dest-namespace", dest="dest_namespace",
+                        help="destination namespace (if different)")
     
     (options, args) = parser.parse_known_args()
 
-    s = SyncSites(options)
-    s.check_sysops()
-    s.check_namespaces()
-    s.generate_overviews()
+    sync = SyncSites(options)
+    sync.check_sysops()
+    sync.check_namespaces()
+    sync.generate_overviews()
     
