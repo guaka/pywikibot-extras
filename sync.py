@@ -14,6 +14,7 @@ from wikipedia import *
 
 
 def namespaces(site):
+    '''dict from namespace number to prefix'''
     ns = dict(map(lambda n: (site.getNamespaceIndex(n), n), 
                   site.namespaces()))
     ns[0] = ''
@@ -21,12 +22,15 @@ def namespaces(site):
 
 
 def multiple_replace(text, word_dict):
+    '''Replace all occurrences in text of key value pairs in word_dict'''
     for key in word_dict:
         text = text.replace(key, word_dict[key])
     return text
 
 
 class SyncSites:
+    '''Work is done in here.'''
+
     def __init__(self, options):
 	self.options = options
 
@@ -62,6 +66,10 @@ class SyncSites:
         print
 
     def check_sysops(self):
+        '''Check if sysops are the same
+
+        TODO: make optional
+        '''
         def get_users(site):
             userlist = site.getUrl(site.get_address('Special:Userlist&group=sysop'))
             # Hackery but working. At least on MW 1.15.0
@@ -76,6 +84,7 @@ class SyncSites:
             self.user_diff[site] = diff
 
     def check_namespaces(self):
+        '''Check all namespaces, to be ditched for clarity'''
         namespaces = [
             0,   # Main
             8,   # MediaWiki
@@ -96,6 +105,8 @@ class SyncSites:
             self.check_namespace(ns)
 
     def check_namespace(self, namespace):
+        '''Check an entire namespace'''
+
         print "\nCHECKING NAMESPACE", namespace
         pages = map(lambda p: p.title(),
                     self.original.allpages('!', namespace))
@@ -112,6 +123,7 @@ class SyncSites:
 
 
     def generate_overviews(self):
+        '''Create page on wikis with overview of bot results'''
         for site in self.sites:
             sync_overview_page = Page(site, 'User:' + site.loggedInAs() + '/sync.py overview')
             output = "== Pages that differ from original ==\n\n"
@@ -131,6 +143,8 @@ class SyncSites:
 
 
     def check_page(self, pagename):
+        '''Check one page'''
+
         print "\nChecking", pagename,
         sys.stdout.flush()
         page1 = Page(self.original, pagename)
@@ -138,7 +152,7 @@ class SyncSites:
 
         for site in self.sites:
             if options.dest_namespace:
-                new_pagename = namespaces(site)[int(options.dest_namespace)] + page1.titleWithoutNamespace()
+                new_pagename = namespaces(site)[int(options.dest_namespace)] + ':' + page1.titleWithoutNamespace()
                 print "\nCross namespace, new title: ", new_pagename
             else:
                 new_pagename = pagename
@@ -167,15 +181,13 @@ class SyncSites:
                 sys.stdout.write('.')
                 sys.stdout.flush()
 
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
     parser = ArgumentParser()
     parser.add_argument("-f", "--family", dest="family",
                         help="wiki family")
-    # TODO:  
-    #parser.add_argument("-df", "--origin-family", dest="family",
-    #                    help="if origin family differs from destination family")
 
     parser.add_argument("-r", "--replace", action="store_true",
                         help="actually replace pages (without this option you will only get an overview page)")
@@ -190,6 +202,7 @@ if __name__ == '__main__':
     
     (options, args) = parser.parse_known_args()
 
+    # sync is global for convenient IPython debugging
     sync = SyncSites(options)
     sync.check_sysops()
     sync.check_namespaces()
