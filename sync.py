@@ -139,8 +139,11 @@ class SyncSites:
                 output += "All users from original are also present on this wiki"
 
             print output
-            sync_overview_page.put(output, site.loggedInAs() + ' sync.py')
+            sync_overview_page.put(output, self.put_message(site))
 
+
+    def put_message(self, site):
+        return site.loggedInAs() + ' sync.py synchronization from ' + str(self.original)
 
     def check_page(self, pagename):
         '''Check one page'''
@@ -176,7 +179,7 @@ class SyncSites:
                 self.differences[site].append(pagename)
 
 		if self.options.replace:
-		  page2.put(txt1, 'sync.py')
+		  page2.put(txt1, self.put_message(site))
             else:
                 sys.stdout.write('.')
                 sys.stdout.flush()
