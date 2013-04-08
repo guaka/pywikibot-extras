@@ -38,6 +38,16 @@ https://github.com/guaka/pywikibot-extras/issues/new
 
 
 
+
+families
+--------
+
+Family files for [couchwiki](http://couchwiki.org/),
+[hitchwiki](http://hitchwiki.org/), [trashwiki](http://trashwiki.org)
+and [veganwiki](http://vegan.wiki.yt).
+
+
+
 license
 -------
 
