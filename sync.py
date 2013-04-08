@@ -155,7 +155,10 @@ class SyncSites:
 
         for site in self.sites:
             if options.dest_namespace:
-                new_pagename = namespaces(site)[int(options.dest_namespace)] + ':' + page1.titleWithoutNamespace()
+                prefix = namespaces(site)[int(options.dest_namespace)]
+                if prefix:
+                    prefix += ':'
+                new_pagename = prefix + page1.titleWithoutNamespace()
                 print "\nCross namespace, new title: ", new_pagename
             else:
                 new_pagename = pagename
