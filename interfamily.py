@@ -17,51 +17,59 @@ from wikipedia import *
 class InterwikiFamily:
     '''Work is done in here.'''
 
-    def __init__(self):
-	self.families = { 
-            'velo': ['hitchwiki', 'sharewiki'],
-            'veganwiki': ['trashwiki'],
-            'couchwiki': ['trashwiki', 'sharewiki', 'hitchwiki', 'velo'],
-            'trashwiki': ['veganwiki', 'hitchwiki', 'sharewiki'],
-            'sharewiki': ['veganwiki', 'hitchwiki', 'velo', 'trashwiki'],
-            'hitchwiki': ['trashwiki'],
-            }
-
+    def __init__(self, mapping):
+	self.families = mapping
 
         self.wikis = {}
         self.pages = {}
         for family in self.families:
-            print "Loading", family
+            print "Loading page list from", family
             wiki = self.wikis[family] = getSite('en', family)
             
             self.pages[family] = map(lambda p: p.title(),
                                      wiki.allpages('!', 0))
+            self.pages[family].reverse()
 
         for f1 in self.families:
-            for title in self.pages[f1]:
-                page = Page(self.wikis[f1], title)
+            if self.families[f1]:
+                for title in self.pages[f1]:
+                    page = Page(self.wikis[f1], title)
 
-                for f2 in self.families[f1]:
-                    if title in self.pages[f2]:
-                        self.check_link(page, title, f2)
+                    try:
+                        text = page.get()
+                        self.check_text(f1, page, text)
+                    except pywikibot.exceptions.IsRedirectPage:
+                        print 'Error: Redirectpage ' + f1 + ' - ' + title 
+                        
+    def check_text(self, f1, page, text):
+        title = page.title()
+        new_links = []
+        for f2 in self.families[f1]:
+            if title in self.pages[f2]:
+                f = f2.replace('wiki', '')
+                link = '[[' + f + ':' + title + ']]'
+                if text.find(link) < 0:
+                    new_links.append(link)
+                else:
+                    print f1, title, 'already has link', link
 
-    
-    def check_link(self, page, title, family):
-        f = family.replace('wiki', '')
-        try:
-            text = page.get()
-            link = '[[' + f + ':' + title + ']]'
-            if text.find(link) < 0:
-                text += "\n" + link
-                print text
-                page.put(text, 'adding interfamily link to ' + family)
-
-        except pywikibot.exceptions.NoPage:
-            print 'Bizar NoPage exception that we are just going to ignore'
-        except pywikibot.exceptions.IsRedirectPage:
-            print 'error: Redirectpage - todo: handle gracefully'
+        for new_link in new_links:
+            text += "\n" + new_link
+            print text
+        if new_links:
+            page.put(text, 'adding interfamily links')
+            
 
 
 if __name__ == '__main__':
-    inter = InterwikiFamily()
+    mapping = { 
+            'sharewiki': ['veganwiki', 'hitchwiki', 'velo', 'trashwiki'],
+            'velo': [], #['hitchwiki', 'sharewiki'],
+            'couchwiki': ['trashwiki', 'sharewiki', 'hitchwiki', 'velo'],
+            'trashwiki': [], #['veganwiki', 'hitchwiki', 'sharewiki'],
+            'veganwiki': [], #['trashwiki'],
+            'hitchwiki': ['trashwiki'],
+            }
+
+    inter = InterwikiFamily(mapping)
     
