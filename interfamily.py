@@ -17,18 +17,23 @@ from wikipedia import *
 class InterwikiFamily:
     '''Work is done in here.'''
 
+    def fetch_family(self, family):
+        print 'fetching', family
+        if not self.pages.has_key(family):
+            wiki = self.wikis[family] = getSite('en', family)
+            self.pages[family] = map(lambda p: p.title(),
+                                     wiki.allpages('!', 0))
+
+
     def __init__(self, mapping):
 	self.families = mapping
 
         self.wikis = {}
         self.pages = {}
         for family in self.families:
-            print "Loading page list from", family
-            wiki = self.wikis[family] = getSite('en', family)
-            
-            self.pages[family] = map(lambda p: p.title(),
-                                     wiki.allpages('!', 0))
-            self.pages[family].reverse()
+            self.fetch_family(family)
+            for subfamily in self.families[family]:
+                self.fetch_family(subfamily)
 
         for f1 in self.families:
             if self.families[f1]:
@@ -40,6 +45,8 @@ class InterwikiFamily:
                         self.check_text(f1, page, text)
                     except pywikibot.exceptions.IsRedirectPage:
                         print 'Error: Redirectpage ' + f1 + ' - ' + title 
+                    except pywikibot.exceptions.NoPage:
+                        print 'Bizarre NoPage exception that we are just going to ignore'
                         
     def check_text(self, f1, page, text):
         title = page.title()
@@ -62,14 +69,25 @@ class InterwikiFamily:
 
 
 if __name__ == '__main__':
-    mapping = { 
-            'sharewiki': ['veganwiki', 'hitchwiki', 'velo', 'trashwiki'],
-            'velo': [], #['hitchwiki', 'sharewiki'],
-            'couchwiki': ['trashwiki', 'sharewiki', 'hitchwiki', 'velo'],
-            'trashwiki': [], #['veganwiki', 'hitchwiki', 'sharewiki'],
-            'veganwiki': [], #['trashwiki'],
-            'hitchwiki': ['trashwiki'],
-            }
+    from argparse import ArgumentParser
 
+    parser = ArgumentParser()
+    parser.add_argument("--source", nargs='?', help="source family")
+    parser.add_argument('destinations', metavar='N', type=str, nargs='+',
+                        help='run on this wiki')
+    
+    (options, args) = parser.parse_known_args()
+
+    full_mapping = {
+        'sharewiki': ['veganwiki', 'hitchwiki', 'velo', 'trashwiki'],
+        'velo': ['hitchwiki', 'sharewiki'],
+        'couchwiki': ['trashwiki', 'sharewiki', 'hitchwiki', 'velo'],
+        'trashwiki': ['veganwiki', 'hitchwiki', 'sharewiki'],
+        'veganwiki': ['trashwiki'],
+        'hitchwiki': ['trashwiki'],
+        }
+
+    mapping = { options.source: options.destinations }
+    print 'mapping', mapping
     inter = InterwikiFamily(mapping)
     
